@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+code = """from dataclasses import dataclass, field
 from typing import Optional
 from engine.feedstock import FeedstockInput, analyse, FeedstockResult
 from engine.mass_balance import MassBalanceInput, calculate as mb_calculate
@@ -28,7 +28,7 @@ def co2_sequestered(
     H_C_molar: float,
     operating_hours_yr: float = 8000.0,
 ) -> dict:
-    """
+    \"\"\"
     Calculate CO2 sequestration from biochar production.
 
     Carbon permanence factor from EBC methodology:
@@ -44,7 +44,7 @@ def co2_sequestered(
 
     Returns:
         dict with C_sequestered_kg_h, CO2_kg_h, CO2_t_yr, permanence_factor
-    """
+    \"\"\"
     perm = EBC["carbon_permanence_factor"]
     if H_C_molar < 0.4:
         permanence = perm["H_C_below_0_4"]
@@ -74,10 +74,10 @@ def co2_sequestered(
 
 @dataclass
 class SystemInput:
-    """
+    \"\"\"
     Complete plant specification for the integrated system calculation.
     All modules are driven from this single input object.
-    """
+    \"\"\"
     # Identity
     project_name: str = "Unnamed Project"
     scenario_name: str = ""
@@ -131,10 +131,10 @@ class SystemInput:
 
 @dataclass
 class SystemResult:
-    """
+    \"\"\"
     Complete integrated system result.
     Contains sub-results from each module plus integration conclusions.
-    """
+    \"\"\"
     # Module results
     feedstock: FeedstockResult = None
     mass_balance: MassBalanceResult = None
@@ -180,7 +180,7 @@ class SystemResult:
 # ---------------------------------------------------------------------------
 
 def calculate(inputs: SystemInput) -> SystemResult:
-    """
+    \"\"\"
     Run complete integrated plant analysis.
 
     Executes all modules in sequence and checks cross-module consistency.
@@ -190,7 +190,7 @@ def calculate(inputs: SystemInput) -> SystemResult:
 
     Returns:
         SystemResult with all module outputs and integration conclusions
-    """
+    \"\"\"
     result = SystemResult()
     all_warnings = []
     result.project_name  = inputs.project_name
@@ -356,7 +356,7 @@ def calculate_scenarios(
     base_inputs: SystemInput,
     feed_rates: list,
 ) -> list:
-    """
+    \"\"\"
     Run integrated analysis across multiple feed rates.
     All other inputs remain constant -- only feed rate varies.
 
@@ -366,7 +366,7 @@ def calculate_scenarios(
 
     Returns:
         List of SystemResult
-    """
+    \"\"\"
     results = []
     for fr in feed_rates:
         inp = SystemInput(
@@ -395,26 +395,26 @@ def calculate_scenarios(
 # ---------------------------------------------------------------------------
 
 def print_summary(result: SystemResult) -> None:
-    """Print formatted single-scenario summary."""
+    \"\"\"Print formatted single-scenario summary.\"\"\"
     w = 70
-    print(f"\n{'='*w}")
+    print(f"\\n{'='*w}")
     print(f"SYSTEM INTEGRATION RESULT  |  {result.project_name}")
     print(f"Scenario: {result.scenario_name}  |  Feed rate: {result.feed_rate_ar:.0f} kg/h ar")
     print(f"{'='*w}")
 
-    print(f"\nFEEDSTOCK")
+    print(f"\\nFEEDSTOCK")
     fs = result.feedstock
     print(f"  HHV_dry:      {fs.HHV_dry:.0f} kJ/kg")
     print(f"  LHV_ar:       {fs.LHV_ar:.0f} kJ/kg")
     print(f"  Consistent:   {'YES' if fs.composition_consistent else 'NO -- see warnings'}")
 
-    print(f"\nMASS BALANCE")
+    print(f"\\nMASS BALANCE")
     mb = result.mass_balance
     print(f"  Feed (ar):    {mb.feed_ar:.0f} kg/h")
     print(f"  Biochar:      {mb.biochar_dry:.0f} kg/h dry  ({mb.biochar_yield_dry_pct:.1f}% yield)")
     print(f"  Syngas:       {mb.syngas:.0f} kg/h")
 
-    print(f"\nKILN HEAT TRANSFER")
+    print(f"\\nKILN HEAT TRANSFER")
     ht = result.heat_transfer
     print(f"  U overall:    {ht.U_overall:.1f} W/m2*K")
     print(f"  Q delivered:  {ht.Q_delivered_kW:.0f} kW")
@@ -423,7 +423,7 @@ def print_summary(result: SystemResult) -> None:
     print(f"  Max feed:     {ht.max_feed_rate_ar:.0f} kg/h")
     print(f"  Thermal OK:   {'YES' if result.thermal_feasible else 'NO'}")
 
-    print(f"\nCOMBUSTION SYSTEM")
+    print(f"\\nCOMBUSTION SYSTEM")
     print(f"  Syngas flow:  {mb.syngas:.0f} kg/h")
     if result.combustion_feasible:
         print(f"  Valid splits: {result.split_min_valid:.2f} - {result.split_max_valid:.2f} to RBu")
@@ -436,7 +436,7 @@ def print_summary(result: SystemResult) -> None:
     else:
         print(f"  NO VALID SPLIT -- PCC cannot meet EU WID at this feed rate")
 
-    print(f"\nCARBON SEQUESTRATION")
+    print(f"\\nCARBON SEQUESTRATION")
     seq = result.sequestration
     print(f"  Biochar:      {mb.biochar_dry:.0f} kg/h dry")
     print(f"  C permanent:  {seq['C_sequestered_kg_h']:.1f} kg/h")
@@ -444,19 +444,19 @@ def print_summary(result: SystemResult) -> None:
     print(f"  CO2/year:     {result.CO2_t_yr:.0f} t CO2/year  ({seq['operating_hours_yr']:.0f} h/yr)")
     print(f"  Permanence:   {seq['permanence_factor']*100:.0f}%  (H/C={seq['H_C_molar']:.2f})")
 
-    print(f"\nSYSTEM STATUS:  {result.system_status}")
+    print(f"\\nSYSTEM STATUS:  {result.system_status}")
 
     if result.all_warnings:
-        print(f"\nWARNINGS ({len(result.all_warnings)}):")
+        print(f"\\nWARNINGS ({len(result.all_warnings)}):")
         for w_txt in result.all_warnings:
             print(f"  ! {w_txt}")
 
-    print(f"{'='*w}\n")
+    print(f"{'='*w}\\n")
 
 
 def print_envelope(results: list) -> None:
-    """Print multi-scenario operating envelope table."""
-    print(f"\n{'='*110}")
+    \"\"\"Print multi-scenario operating envelope table.\"\"\"
+    print(f"\\n{'='*110}")
     print("OPERATING ENVELOPE")
     print(f"{'='*110}")
     print(
@@ -488,4 +488,19 @@ def print_envelope(results: list) -> None:
             f"{r.total_air_kg_h:>8.0f} {r.CO2_t_yr:>8.0f}  {r.system_status}"
         )
 
-    print(f"{'='*110}\n")
+    print(f"{'='*110}\\n")
+"""
+
+with open("engine/integration.py", "w", encoding="utf-8") as f:
+    f.write(code)
+
+lines = len(code.splitlines())
+print(f"Written: {lines} lines")
+
+with open("engine/integration.py", "r") as f:
+    content = f.read()
+print("calculate function:", "def calculate" in content)
+print("co2_sequestered:", "def co2_sequestered" in content)
+print("SystemInput:", "class SystemInput" in content)
+print("SystemResult:", "class SystemResult" in content)
+print("print_envelope:", "def print_envelope" in content)
