@@ -1,4 +1,4 @@
-"""
+﻿"""
 Validation tests for engine/mass_balance.py
 
 Reference: LSM Report 2602TN-R0 (Jibito BR-01)
@@ -17,9 +17,9 @@ from engine.mass_balance import (
 from engine.constants import JIBITO_REFERENCE
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # FIXTURES
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 @pytest.fixture
 def jibito_A():
@@ -28,7 +28,7 @@ def jibito_A():
         moisture_ar    = 10.13,
         ash_dry        = 6.843,
         ash_biochar_ar = 38.68,
-        scenario_name  = "Scenario A — 2000 kg/h",
+        scenario_name  = "Scenario A -- 2000 kg/h",
     )
 
 @pytest.fixture
@@ -38,7 +38,7 @@ def jibito_B():
         moisture_ar    = 10.13,
         ash_dry        = 6.843,
         ash_biochar_ar = 38.68,
-        scenario_name  = "Scenario B — 2500 kg/h",
+        scenario_name  = "Scenario B -- 2500 kg/h",
     )
 
 @pytest.fixture
@@ -48,18 +48,18 @@ def jibito_C():
         moisture_ar    = 10.13,
         ash_dry        = 6.843,
         ash_biochar_ar = 38.68,
-        scenario_name  = "Scenario C — 2800 kg/h",
+        scenario_name  = "Scenario C -- 2800 kg/h",
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # UNIT TESTS
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 class TestAshBalance:
 
     def test_jibito_yield(self):
-        """6.843 / 38.68 = 17.69% dry yield — matches LSM exactly."""
+        """6.843 / 38.68 = 17.69% dry yield -- matches LSM exactly."""
         result = biochar_yield_from_ash_balance(6.843, 38.68)
         expected = JIBITO_REFERENCE["biochar_yield_dry_pct"]
         assert abs(result * 100 - expected) < 0.01, \
@@ -100,9 +100,9 @@ class TestSyngasFlow:
         assert syngas_flow(2000.0, 318.0) == pytest.approx(1682.0)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # INTEGRATION TESTS
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 class TestCalculate:
 

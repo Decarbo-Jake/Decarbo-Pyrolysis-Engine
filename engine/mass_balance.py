@@ -1,5 +1,5 @@
 """
-Module 2 — Mass Balance
+Module 2 -- Mass Balance
 
 Calculates biochar and syngas mass flows from feedstock and yield data.
 Uses the ash balance method: all feedstock ash concentrates in biochar.
@@ -12,9 +12,9 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # DATA STRUCTURES
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 @dataclass
 class MassBalanceInput:
@@ -33,7 +33,7 @@ class MassBalanceInput:
     ash_biochar_ar: float = 38.68    # % ash in biochar as-received
                                      # Jibito default: average of two Eurofins samples
 
-    # Syngas composition (weight fractions) — from HSC model or plant measurement
+    # Syngas composition (weight fractions) -- from HSC model or plant measurement
     NCG_wt_frac: float = 0.543       # Non-condensable gases (CO, CO2, CH4, H2)
     tars_wt_frac: float = 0.190      # Condensable tars
     H2O_wt_frac: float = 0.268       # Moisture in syngas
@@ -70,7 +70,7 @@ class MassBalanceResult:
     H2O_syngas: float = 0.0          # kg/h moisture in syngas
 
     # Mass balance closure
-    closure: float = 0.0             # biochar + syngas — should equal feed_ar
+    closure: float = 0.0             # biochar + syngas -- should equal feed_ar
     closure_error_pct: float = 0.0   # % deviation from feed_ar
 
     # Flags
@@ -78,9 +78,9 @@ class MassBalanceResult:
     scenario_name: str = ""
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # CORE FUNCTIONS
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def biochar_yield_from_ash_balance(
     ash_feed_dry: float,
@@ -113,7 +113,7 @@ def biochar_yield_from_ash_balance(
     if ash_biochar_ar <= ash_feed_dry:
         raise ValueError(
             f"Biochar ash ({ash_biochar_ar}%) must be greater than feedstock ash "
-            f"({ash_feed_dry}%) — ash concentrates in biochar during pyrolysis"
+            f"({ash_feed_dry}%) -- ash concentrates in biochar during pyrolysis"
         )
     return ash_feed_dry / ash_biochar_ar
 
@@ -142,8 +142,8 @@ def syngas_flow(feed_ar: float, biochar_dry: float) -> float:
     Formula:
         Syngas = Feed_ar - Biochar_dry
 
-    Note: Biochar moisture is ~0% at reactor exit temperature (550°C),
-    so biochar_dry ≈ biochar_ar for mass balance purposes.
+    Note: Biochar moisture is ~0% at reactor exit temperature (550 degreesC),
+    so biochar_dry  biochar_ar for mass balance purposes.
 
     Args:
         feed_ar:     Total feed rate as-received [kg/h]
@@ -155,9 +155,9 @@ def syngas_flow(feed_ar: float, biochar_dry: float) -> float:
     return feed_ar - biochar_dry
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # MAIN CALCULATION FUNCTION
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def calculate(inputs: MassBalanceInput) -> MassBalanceResult:
     """
@@ -194,7 +194,7 @@ def calculate(inputs: MassBalanceInput) -> MassBalanceResult:
 
     # Step 3: Biochar flow
     result.biochar_dry = result.feed_dry * result.biochar_yield_dry
-    result.biochar_ar  = result.biochar_dry   # moisture ~0% at 550°C exit
+    result.biochar_ar  = result.biochar_dry   # moisture ~0% at 550 degreesC exit
 
     # Step 4: Syngas by difference
     result.syngas = syngas_flow(inputs.feed_rate_ar, result.biochar_dry)
@@ -230,9 +230,9 @@ def calculate(inputs: MassBalanceInput) -> MassBalanceResult:
     return result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # MULTI-SCENARIO RUNNER
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def calculate_scenarios(
     feed_rates: list,
@@ -258,7 +258,7 @@ def calculate_scenarios(
         scenario_names: Optional list of labels
 
     Returns:
-        List of MassBalanceResult — one per feed rate
+        List of MassBalanceResult -- one per feed rate
     """
     if scenario_names is None:
         scenario_names = [f"{int(fr)} kg/h" for fr in feed_rates]
@@ -285,14 +285,14 @@ def print_summary(results: list) -> None:
     Print a formatted summary table of mass balance results.
     Useful for quick checks during development.
     """
-    print(f"\n{'─'*70}")
+    print(f"\n{'-'*70}")
     print(f"MASS BALANCE SUMMARY")
-    print(f"{'─'*70}")
+    print(f"{'-'*70}")
     header = f"{'Stream':<25}" + "".join(
         f"{r.scenario_name:>14}" for r in results
     )
     print(header)
-    print(f"{'─'*70}")
+    print(f"{'-'*70}")
 
     rows = [
         ("Feed (ar) [kg/h]",        lambda r: r.feed_ar),
@@ -310,4 +310,4 @@ def print_summary(results: list) -> None:
         row = f"{label:<25}" + "".join(f"{fn(r):>14.1f}" for r in results)
         print(row)
 
-    print(f"{'─'*70}\n")
+    print(f"{'-'*70}\n")

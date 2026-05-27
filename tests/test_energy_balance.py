@@ -1,4 +1,4 @@
-"""
+﻿"""
 Validation tests for engine/energy_balance.py
 
 Reference: LSM Report 2602TN-R0 (Jibito BR-01, May 2026)
@@ -18,13 +18,13 @@ from engine.energy_balance import (
 from engine.constants import JIBITO_REFERENCE, CP_BIOMASS_WET, CP_BIOCHAR
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # FIXTURES
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 @pytest.fixture
 def jibito_A():
-    """Scenario A — 2,000 kg/h — using LSM reference values."""
+    """Scenario A -- 2,000 kg/h -- using LSM reference values."""
     return EnergyBalanceInput(
         feed_rate_ar      = 2000.0,
         LHV_ar            = JIBITO_REFERENCE["LHV_ar_kJ_kg"],   # 13,204 kJ/kg
@@ -38,13 +38,13 @@ def jibito_A():
         flue_gas_loss_kW  = 5909.0,
         radiation_kW      = 85.0,
         biochar_latent_kW = 4.0,
-        scenario_name     = "Scenario A — 2000 kg/h",
+        scenario_name     = "Scenario A -- 2000 kg/h",
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # UNIT TESTS
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 class TestFeedCombustionPower:
 
@@ -64,20 +64,20 @@ class TestFeedCombustionPower:
 class TestSensibleHeat:
 
     def test_feed_sensible_jibito_A(self):
-        """2000 kg/h feed at 35°C -> 32 kW (LSM: 32 kW)."""
+        """2000 kg/h feed at 35 degreesC -> 32 kW (LSM: 32 kW)."""
         result = sensible_heat(2000.0, CP_BIOMASS_WET, 35.0, 0.0)
         assert abs(result - JIBITO_REFERENCE["feed_sensible_kW"]) < 2.0, \
             f"Expected ~32 kW, got {result:.1f}"
 
     def test_air_sensible_jibito_A(self):
-        """Back-calculated air flow at 27°C -> 157 kW (LSM: 157 kW)."""
+        """Back-calculated air flow at 27 degreesC -> 157 kW (LSM: 157 kW)."""
         air_flow = air_flow_from_sensible_heat(157.0, 27.0)
         result   = sensible_heat(air_flow, 1.04, 27.0, 0.0)
         assert abs(result - JIBITO_REFERENCE["air_sensible_kW"]) < 2.0, \
             f"Expected ~157 kW, got {result:.1f}"
 
     def test_biochar_sensible_jibito_A(self):
-        """318 kg/h biochar at 550°C -> 61 kW (LSM: 61 kW exact)."""
+        """318 kg/h biochar at 550 degreesC -> 61 kW (LSM: 61 kW exact)."""
         result = sensible_heat(318.0, CP_BIOCHAR, 550.0, 0.0)
         assert abs(result - JIBITO_REFERENCE["biochar_sensible_kW"]) < 2.0, \
             f"Expected ~61 kW, got {result:.1f}"
@@ -100,7 +100,7 @@ class TestBiocharChemicalEnergy:
 class TestAirFlowBackCalc:
 
     def test_jibito_A(self):
-        """157 kW air sensible at 27°C -> ~20,117 kg/h."""
+        """157 kW air sensible at 27 degreesC -> ~20,117 kg/h."""
         result = air_flow_from_sensible_heat(157.0, 27.0)
         assert abs(result - 20117) < 200, \
             f"Expected ~20117 kg/h, got {result:.0f}"
@@ -111,9 +111,9 @@ class TestAirFlowBackCalc:
             air_flow_from_sensible_heat(157.0, T_air=0.0, T_ref=0.0)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # INTEGRATION TESTS
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 class TestCalculate:
 

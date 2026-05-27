@@ -1,8 +1,8 @@
 """
-Module 3 — Energy Balance
+Module 3 -- Energy Balance
 
 Calculates all energy inputs and outputs for the pyrolysis plant.
-Reference temperature: 0°C (all enthalpy terms relative to 0°C).
+Reference temperature: 0 degreesC (all enthalpy terms relative to 0 degreesC).
 
 Validated against: LSM Report 2602TN-R0 (Jibito BR-01, May 2026)
 Residual difference vs LSM (~0.4%) explained by LHV_ar discrepancy (Q3).
@@ -18,9 +18,9 @@ from engine.constants import (
 )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # DATA STRUCTURES
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 @dataclass
 class EnergyBalanceInput:
@@ -30,26 +30,26 @@ class EnergyBalanceInput:
     """
     # Feed
     feed_rate_ar: float = 0.0        # kg/h as-received
-    LHV_ar: float = 0.0              # kJ/kg — from feedstock module
-    T_feed: float = 35.0             # °C feedstock temperature
-    T_ref: float = 0.0               # °C reference temperature
+    LHV_ar: float = 0.0              # kJ/kg -- from feedstock module
+    T_feed: float = 35.0             #  degreesC feedstock temperature
+    T_ref: float = 0.0               #  degreesC reference temperature
 
     # Air
     air_flow: float = 0.0            # kg/h total combustion air
-    T_air: float = 27.0              # °C ambient air temperature
+    T_air: float = 27.0              #  degreesC ambient air temperature
 
     # Biochar
     biochar_dry: float = 0.0         # kg/h from mass balance module
-    LHV_biochar_dry: float = 16672.0 # kJ/kg — from LSM/Eurofins
-    T_pyrolysis: float = 550.0       # °C pyrolysis temperature
+    LHV_biochar_dry: float = 16672.0 # kJ/kg -- from LSM/Eurofins
+    T_pyrolysis: float = 550.0       #  degreesC pyrolysis temperature
 
     # Support burner (0 if self-sustaining)
     support_burner_kW: float = 0.0
 
     # Outputs
-    flue_gas_loss_kW: float = 0.0    # kW — from HSC model or measurement
-    radiation_kW: float = 85.0       # kW — fixed loss (LSM Section 1.7)
-    biochar_latent_kW: float = 0.0   # kW — residual moisture in biochar
+    flue_gas_loss_kW: float = 0.0    # kW -- from HSC model or measurement
+    radiation_kW: float = 85.0       # kW -- fixed loss (LSM Section 1.7)
+    biochar_latent_kW: float = 0.0   # kW -- residual moisture in biochar
 
     scenario_name: str = ""
 
@@ -68,7 +68,7 @@ class EnergyBalanceResult:
     total_in_kW: float = 0.0
 
     # --- OUTPUTS ---
-    flue_gas_loss_kW: float = 0.0     # Dominant loss — hot PCC exhaust
+    flue_gas_loss_kW: float = 0.0     # Dominant loss -- hot PCC exhaust
     radiation_kW: float = 0.0         # Surface radiation losses
     biochar_combustion_kW: float = 0.0 # Chemical energy in biochar (sequestered)
     biochar_sensible_kW: float = 0.0  # Sensible heat of hot biochar
@@ -87,9 +87,9 @@ class EnergyBalanceResult:
     scenario_name: str = ""
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # CORE FUNCTIONS
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def feed_combustion_power(feed_rate_ar: float, LHV_ar: float) -> float:
     """
@@ -122,13 +122,13 @@ def sensible_heat(
     Sensible heat of a stream above reference temperature.
 
     Formula:
-        Q [kW] = (mass_flow [kg/h] / 3600) * Cp [kJ/kg·K] * (T_stream - T_ref) [K]
+        Q [kW] = (mass_flow [kg/h] / 3600) * Cp [kJ/kg*K] * (T_stream - T_ref) [K]
 
     Args:
         mass_flow: Mass flow rate [kg/h]
-        Cp:        Specific heat capacity [kJ/kg·K]
-        T_stream:  Stream temperature [°C]
-        T_ref:     Reference temperature [°C]  default: 0°C
+        Cp:        Specific heat capacity [kJ/kg*K]
+        T_stream:  Stream temperature [ degreesC]
+        T_ref:     Reference temperature [ degreesC]  default: 0 degreesC
 
     Returns:
         Sensible heat [kW]
@@ -143,7 +143,7 @@ def sensible_heat(
 
 def biochar_chemical_energy(biochar_dry: float, LHV_biochar_dry: float) -> float:
     """
-    Chemical energy stored in biochar (not combusted — sequestered carbon).
+    Chemical energy stored in biochar (not combusted -- sequestered carbon).
 
     This energy is RETAINED in the solid product, not released as heat.
     It represents the carbon removal credit of the plant.
@@ -159,7 +159,7 @@ def biochar_chemical_energy(biochar_dry: float, LHV_biochar_dry: float) -> float
         Biochar chemical energy [kW]
 
     Example (Jibito Scenario A):
-        biochar_chemical_energy(318, 16672) -> 1,471 kW  (LSM: 1,471 kW ✓)
+        biochar_chemical_energy(318, 16672) -> 1,471 kW  (LSM: 1,471 kW )
     """
     return (biochar_dry / 3600.0) * LHV_biochar_dry
 
@@ -179,9 +179,9 @@ def air_flow_from_sensible_heat(
 
     Args:
         sensible_heat_kW: Air sensible heat from energy balance [kW]
-        T_air:            Air temperature [°C]
-        T_ref:            Reference temperature [°C]
-        Cp_air:           Specific heat of moist air [kJ/kg·K]
+        T_air:            Air temperature [ degreesC]
+        T_ref:            Reference temperature [ degreesC]
+        Cp_air:           Specific heat of moist air [kJ/kg*K]
 
     Returns:
         Total air mass flow [kg/h]
@@ -190,13 +190,13 @@ def air_flow_from_sensible_heat(
         air_flow_from_sensible_heat(157, 27) -> ~20,117 kg/h
     """
     if T_air <= T_ref:
-        raise ValueError(f"Air temperature ({T_air}°C) must be above T_ref ({T_ref}°C)")
+        raise ValueError(f"Air temperature ({T_air} degreesC) must be above T_ref ({T_ref} degreesC)")
     return sensible_heat_kW * 3600.0 / (Cp_air * (T_air - T_ref))
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # MAIN CALCULATION FUNCTION
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def calculate(inputs: EnergyBalanceInput) -> EnergyBalanceResult:
     """
@@ -217,7 +217,7 @@ def calculate(inputs: EnergyBalanceInput) -> EnergyBalanceResult:
     warnings = []
     result.scenario_name = inputs.scenario_name
 
-    # ── INPUTS ────────────────────────────────────────────────────────────
+    # -- INPUTS ------------------------------------------------------------
 
     # 1a. Feed combustion power
     result.feed_combustion_kW = feed_combustion_power(
@@ -246,7 +246,7 @@ def calculate(inputs: EnergyBalanceInput) -> EnergyBalanceResult:
         result.support_burner_kW
     )
 
-    # ── OUTPUTS ───────────────────────────────────────────────────────────
+    # -- OUTPUTS -----------------------------------------------------------
 
     # 2a. Flue gas loss (from HSC model or measurement)
     result.flue_gas_loss_kW = inputs.flue_gas_loss_kW
@@ -254,7 +254,7 @@ def calculate(inputs: EnergyBalanceInput) -> EnergyBalanceResult:
     # 2b. Radiation losses
     result.radiation_kW = inputs.radiation_kW
 
-    # 2c. Biochar chemical energy (sequestered — largest output after flue gas)
+    # 2c. Biochar chemical energy (sequestered -- largest output after flue gas)
     result.biochar_combustion_kW = biochar_chemical_energy(
         inputs.biochar_dry, inputs.LHV_biochar_dry
     )
@@ -276,7 +276,7 @@ def calculate(inputs: EnergyBalanceInput) -> EnergyBalanceResult:
         result.biochar_latent_kW
     )
 
-    # ── BALANCE ───────────────────────────────────────────────────────────
+    # -- BALANCE -----------------------------------------------------------
 
     result.balance_kW = result.total_in_kW - result.total_out_kW
 
@@ -285,7 +285,7 @@ def calculate(inputs: EnergyBalanceInput) -> EnergyBalanceResult:
             result.balance_kW / result.total_in_kW * 100.0
         )
 
-    # ── FRACTIONS ─────────────────────────────────────────────────────────
+    # -- FRACTIONS ---------------------------------------------------------
 
     if result.total_in_kW > 0:
         result.flue_gas_fraction = (
@@ -296,7 +296,7 @@ def calculate(inputs: EnergyBalanceInput) -> EnergyBalanceResult:
             if result.feed_combustion_kW > 0 else 0.0
         )
 
-    # ── FLAGS ─────────────────────────────────────────────────────────────
+    # -- FLAGS -------------------------------------------------------------
 
     if abs(result.balance_error_pct) > 5.0:
         warnings.append(
@@ -307,7 +307,7 @@ def calculate(inputs: EnergyBalanceInput) -> EnergyBalanceResult:
     if result.flue_gas_fraction > 0.85:
         warnings.append(
             f"Flue gas loss fraction = {result.flue_gas_fraction:.1%} "
-            f"— unusually high. Consider waste heat recovery."
+            f"-- unusually high. Consider waste heat recovery."
         )
 
     if result.support_burner_kW > 0:
@@ -320,9 +320,9 @@ def calculate(inputs: EnergyBalanceInput) -> EnergyBalanceResult:
     return result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # MULTI-SCENARIO RUNNER
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def calculate_scenarios(
     feed_rates: list,
@@ -344,7 +344,7 @@ def calculate_scenarios(
 
     Args:
         feed_rates:       List of feed rates [kg/h ar]
-        LHV_ar:           LHV as-received [kJ/kg] — same for all scenarios
+        LHV_ar:           LHV as-received [kJ/kg] -- same for all scenarios
         biochar_flows:    List of biochar dry flows [kg/h]
         air_flows:        List of total air flows [kg/h]
         flue_gas_losses:  List of flue gas losses [kW] from HSC or measurement
@@ -386,21 +386,21 @@ def calculate_scenarios(
 
 def print_summary(results: list) -> None:
     """Print formatted energy balance comparison table."""
-    print(f"\n{'─'*75}")
+    print(f"\n{'-'*75}")
     print("ENERGY BALANCE SUMMARY  [kW]")
-    print(f"{'─'*75}")
+    print(f"{'-'*75}")
     header = f"{'Term':<30}" + "".join(f"{r.scenario_name:>15}" for r in results)
     print(header)
-    print(f"{'─'*75}")
+    print(f"{'-'*75}")
 
     rows = [
-        ("— INPUTS —",              None),
+        ("-- INPUTS --",              None),
         ("Feed combustion (LHV)",   lambda r: r.feed_combustion_kW),
         ("Feed sensible",           lambda r: r.feed_sensible_kW),
         ("Air sensible",            lambda r: r.air_sensible_kW),
         ("Support burner",          lambda r: r.support_burner_kW),
         ("TOTAL IN",                lambda r: r.total_in_kW),
-        ("— OUTPUTS —",             None),
+        ("-- OUTPUTS --",             None),
         ("Flue gas loss",           lambda r: r.flue_gas_loss_kW),
         ("Radiation",               lambda r: r.radiation_kW),
         ("Biochar combustion",      lambda r: r.biochar_combustion_kW),
@@ -419,4 +419,4 @@ def print_summary(results: list) -> None:
             row = f"{label:<30}" + "".join(f"{fn(r):>15.1f}" for r in results)
             print(row)
 
-    print(f"{'─'*75}\n")
+    print(f"{'-'*75}\n")

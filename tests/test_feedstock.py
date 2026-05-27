@@ -1,4 +1,4 @@
-"""
+﻿"""
 Validation tests for engine/feedstock.py
 
 Reference values: LSM Report 2602TN-R0 (Jibito BR-01, May 2026)
@@ -19,13 +19,13 @@ from engine.feedstock import (
 from engine.constants import JIBITO_REFERENCE
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# FIXTURES  — reusable test inputs
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# FIXTURES  -- reusable test inputs
+# -----------------------------------------------------------------------------
 
 @pytest.fixture
 def jibito_original():
-    """BR-01 with ORIGINAL lab C content (35.17%) — should flag HHV inconsistency."""
+    """BR-01 with ORIGINAL lab C content (35.17%) -- should flag HHV inconsistency."""
     return FeedstockInput(
         name         = "BR-01 Original Lab Data",
         lab_report   = "UBE-11/2023-0238",
@@ -60,9 +60,9 @@ def jibito_corrected():
     )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # UNIT TESTS
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 class TestAshConversion:
 
@@ -88,7 +88,7 @@ class TestBoieEquation:
         """
         Corrected composition -> ~17,572 kJ/kg.
         LSM HSC value: 17,484 kJ/kg.
-        Boie vs HSC known to differ ~0.5% — tolerance set to 1%.
+        Boie vs HSC known to differ ~0.5% -- tolerance set to 1%.
         """
         result = boie_hhv_daf(43.50, 6.49, 1.05, 48.51, 0.46)
         lsm    = JIBITO_REFERENCE["HHV_daf_kJ_kg"]
@@ -97,7 +97,7 @@ class TestBoieEquation:
 
     def test_original_composition_gives_lower_hhv(self):
         """
-        Original C=37.75% daf gives ~14,919 kJ/kg — well below lab-reported
+        Original C=37.75% daf gives ~14,919 kJ/kg -- well below lab-reported
         16,288 kJ/kg. This confirms the Q1 inconsistency.
         """
         ash_dry = ash_dry_from_wet(6.15, 10.13)
@@ -128,25 +128,25 @@ class TestHHVConversions:
     def test_lhv_dry_within_3pct_of_lsm(self):
         """
         Our formula gives ~15,040 kJ/kg; LSM gives 14,720 kJ/kg.
-        Known discrepancy Q2 — tolerance set to 3%.
+        Known discrepancy Q2 -- tolerance set to 3%.
         """
         HHV_dry = hhv_dry_from_daf(17572, 6.843)
         result  = lhv_dry(HHV_dry, 6.05)
         lsm     = JIBITO_REFERENCE["LHV_dry_kJ_kg"]
         assert abs(result - lsm) / lsm < 0.03, \
-            f"LHV_dry {result:.0f} vs LSM {lsm} — exceeds Q2 tolerance of 3%"
+            f"LHV_dry {result:.0f} vs LSM {lsm} -- exceeds Q2 tolerance of 3%"
 
     def test_lhv_ar_within_1pct_of_lsm(self):
         """
         Primary energy balance input.
-        Our formula: ~13,270 kJ/kg; LSM: 13,204 kJ/kg  (diff: +0.5% — Q3).
+        Our formula: ~13,270 kJ/kg; LSM: 13,204 kJ/kg  (diff: +0.5% -- Q3).
         """
         HHV_dry = hhv_dry_from_daf(17572, 6.843)
         HHV_ar  = HHV_dry * (1.0 - 10.13 / 100.0)
         result  = lhv_ar(HHV_ar, 6.05, 6.843, 10.13)
         lsm     = JIBITO_REFERENCE["LHV_ar_kJ_kg"]
         assert abs(result - lsm) / lsm < 0.015, \
-            f"LHV_ar {result:.0f} vs LSM {lsm} — exceeds Q3 tolerance of 1,5%"
+            f"LHV_ar {result:.0f} vs LSM {lsm} -- exceeds Q3 tolerance of 1,5%"
 
 
 class TestMolarRatios:
@@ -167,16 +167,16 @@ class TestMolarRatios:
             molar_ratios(0.0, 5.0, 20.0)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# INTEGRATION TESTS — full analyse() function
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
+# INTEGRATION TESTS -- full analyse() function
+# -----------------------------------------------------------------------------
 
 class TestAnalyse:
 
     def test_original_flags_inconsistency(self, jibito_original):
         """
         Original BR-01 data must trigger HHV inconsistency warning.
-        C=35.17% cannot produce HHV=3,890 kCal/kg — this is the Q1 finding.
+        C=35.17% cannot produce HHV=3,890 kCal/kg -- this is the Q1 finding.
         """
         result = analyse(jibito_original)
         assert result.composition_consistent is False, \
@@ -197,7 +197,7 @@ class TestAnalyse:
             f"HHV_dry {result.HHV_dry:.0f} vs LSM {lsm}"
 
     def test_corrected_lhv_ar_within_1pct(self, jibito_corrected):
-        """LHV_ar is the primary energy balance input — must be within 1,5% of LSM."""
+        """LHV_ar is the primary energy balance input -- must be within 1,5% of LSM."""
         result = analyse(jibito_corrected)
         lsm    = JIBITO_REFERENCE["LHV_ar_kJ_kg"]
         assert abs(result.LHV_ar - lsm) / lsm < 0.015, \

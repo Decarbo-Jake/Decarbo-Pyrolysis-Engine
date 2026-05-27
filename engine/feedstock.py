@@ -1,17 +1,17 @@
 """
-Module 1 — Feedstock Characterisation
+Module 1 -- Feedstock Characterisation
 
 Converts raw laboratory data (ultimate + proximate analysis) into
 all heating value bases used by the calculation engine.
 
-All functions are pure — they take inputs and return outputs with no
+All functions are pure -- they take inputs and return outputs with no
 side effects. No state is stored between calls.
 
 Validated against: LSM Report 2602TN-R0 (Jibito BR-01, May 2026)
 Tolerance vs LSM HSC Chemistry:
   HHV_daf : +0.5%  (HSC uses proprietary thermochemical database)
-  LHV_dry : +2.2%  (Q2 — HSC LHV correction differs from standard Clausius)
-  LHV_ar  : +0.5%  (Q3 — cascades from LHV_dry discrepancy)
+  LHV_dry : +2.2%  (Q2 -- HSC LHV correction differs from standard Clausius)
+  LHV_ar  : +0.5%  (Q3 -- cascades from LHV_dry discrepancy)
 """
 
 from dataclasses import dataclass, field
@@ -25,9 +25,9 @@ from engine.constants import (
 )
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # DATA STRUCTURES
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 @dataclass
 class FeedstockInput:
@@ -38,7 +38,7 @@ class FeedstockInput:
     name: str = "unnamed"
     lab_report: str = ""
 
-    # Ultimate analysis — DRY basis [%wt dry]
+    # Ultimate analysis -- DRY basis [%wt dry]
     C_dry: float = 0.0
     H_dry: float = 0.0
     N_dry: float = 0.0
@@ -46,7 +46,7 @@ class FeedstockInput:
     S_dry: float = 0.0
     Cl_dry: float = 0.05
 
-    # Proximate analysis — WET (as-received) basis [%wt ar]
+    # Proximate analysis -- WET (as-received) basis [%wt ar]
     moisture_ar: float = 0.0
     ash_ar: float = 0.0
     VM_ar: float = 0.0
@@ -96,9 +96,9 @@ class FeedstockResult:
     warnings: list = field(default_factory=list)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # CORE FUNCTIONS
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def ash_dry_from_wet(ash_ar: float, moisture_ar: float) -> float:
     """
@@ -192,7 +192,7 @@ def lhv_dry(HHV_dry: float, H_dry: float) -> float:
     9 kg H2O produced per kg H (molar mass ratio 18/2).
 
     Note: LSM reports 14,720 kJ/kg for Jibito; this gives ~15,040 kJ/kg.
-    Known discrepancy Q2 — HSC uses different LHV correction.
+    Known discrepancy Q2 -- HSC uses different LHV correction.
     """
     H_dry_frac = H_dry / 100.0
     return HHV_dry - LATENT_HEAT_WATER_25C * H_TO_WATER_MASS_RATIO * H_dry_frac
@@ -213,7 +213,7 @@ def lhv_ar(
 
     Example (Jibito):
         lhv_ar(14711, 6.05, 6.843, 10.13) -> ~13,270 kJ/kg
-        LSM value: 13,204 kJ/kg  (diff: +0.5% — documented as Q3)
+        LSM value: 13,204 kJ/kg  (diff: +0.5% -- documented as Q3)
     """
     H_ar_frac = (H_dry / 100.0) * (1.0 - ash_dry / 100.0) * (1.0 - moisture_ar / 100.0)
     M_ar_frac = moisture_ar / 100.0
@@ -229,7 +229,7 @@ def molar_ratios(
     """
     Calculate H/C and O/C molar ratios for EBC biochar quality assessment.
 
-    Example (Jibito Eurofins Sample 01 — dry basis):
+    Example (Jibito Eurofins Sample 01 -- dry basis):
         molar_ratios(54.7, 1.2, 4.3) -> H/C=0.263, O/C=0.059
         LSM values: H/C=0.26, O/C=0.059  confirmed
     """
@@ -245,9 +245,9 @@ def molar_ratios(
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # MAIN ANALYSIS FUNCTION
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def analyse(feedstock: FeedstockInput) -> FeedstockResult:
     """
@@ -339,9 +339,9 @@ def analyse(feedstock: FeedstockInput) -> FeedstockResult:
     return result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 # CONVENIENCE: load from library
-# ─────────────────────────────────────────────────────────────────────────────
+# -----------------------------------------------------------------------------
 
 def from_library(key: str) -> FeedstockInput:
     """

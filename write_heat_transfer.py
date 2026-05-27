@@ -1,3 +1,4 @@
+content = '''\
 import math
 from dataclasses import dataclass, field
 from engine.constants import (
@@ -240,3 +241,8 @@ def feed_rate_sweep(geometry, T_combustion_gas, T_pyrolysis, moisture_ar,
         )
         results.append(calculate(inp))
     return results
+'''
+
+with open("engine/heat_transfer.py", "w", encoding="utf-8") as f:
+    f.write(content)
+print("Written successfully -", len(content.splitlines()), "lines")
