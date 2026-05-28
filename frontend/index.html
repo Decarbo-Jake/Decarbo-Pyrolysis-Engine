@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decarbo Pyrolysis Calculator</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg2: #f8f8f7;
+    --bg3: #f0f0ee;
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.20);
+    --text: #1a1a1a;
+    --text2: #555550;
+    --text3: #888880;
+    --green: #0f6e56;
+    --green-bg: #e1f5ee;
+    --amber: #854f0b;
+    --amber-bg: #faeeda;
+    --red: #a32d2d;
+    --red-bg: #fcebeb;
+    --blue: #185fa5;
+    --blue-bg: #e6f1fb;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a1a;
+      --bg2: #242424;
+      --bg3: #2e2e2e;
+      --border: rgba(255,255,255,0.12);
+      --border2: rgba(255,255,255,0.20);
+      --text: #f0f0ee;
+      --text2: #b0b0a8;
+      --text3: #777770;
+      --green: #5dcaa5;
+      --green-bg: #04342c;
+      --amber: #ef9f27;
+      --amber-bg: #412402;
+      --red: #f09595;
+      --red-bg: #501313;
+      --blue: #85b7eb;
+      --blue-bg: #042c53;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: var(--bg3); color: var(--text); min-height: 100vh; }
+  .page { max-width: 900px; margin: 0 auto; padding: 16px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between;
+            background: var(--bg); border: 0.5px solid var(--border);
+            border-radius: var(--radius-lg); padding: 12px 16px; margin-bottom: 12px; }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark { width: 32px; height: 32px; background: #0f6e56; border-radius: 6px;
+               display: flex; align-items: center; justify-content: center;
+               color: white; font-weight: 700; font-size: 14px; }
+  .logo-text { font-size: 15px; font-weight: 500; color: var(--text); }
+  .logo-sub { font-size: 11px; color: var(--text3); }
+  .tb-right { display: flex; align-items: center; gap: 8px; }
+  .badge { font-size: 11px; font-weight: 500; padding: 4px 10px;
+           border-radius: var(--radius); }
+  .badge-ok { background: var(--green-bg); color: var(--green); }
+  .badge-warn { background: var(--amber-bg); color: var(--amber); }
+  .badge-err { background: var(--red-bg); color: var(--red); }
+  .api-dot { width: 8px; height: 8px; border-radius: 50%;
+             background: var(--border2); display: inline-block; margin-right: 4px; }
+  .api-dot.on { background: var(--green); }
+  .api-dot.calc { background: var(--amber); animation: pulse .7s infinite; }
+  .api-dot.err { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+  .api-label { font-size: 11px; color: var(--text3); }
+  .kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
+  .kpi { background: var(--bg); border: 0.5px solid var(--border);
+         border-radius: var(--radius); padding: 10px 12px;
+         border-left: 3px solid var(--border2); }
+  .kpi.ok { border-left-color: var(--green); }
+  .kpi.warn { border-left-color: var(--amber); }
+  .kpi.err { border-left-color: var(--red); }
+  .kpi-l { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+  .kpi-v { font-size: 20px; font-weight: 500; color: var(--text); line-height: 1; }
+  .kpi-u { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .flow { display: flex; align-items: stretch; margin-bottom: 12px;
+          background: var(--bg2); border: 0.5px solid var(--border);
+          border-radius: var(--radius-lg); overflow: hidden; }
+  .fn { flex: 1; padding: 8px 6px; text-align: center;
+        border-right: 0.5px solid var(--border); font-size: 10px; }
+  .fn:last-child { border-right: none; }
+  .fn-l { font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .fn-v { color: var(--text2); }
+  .fn-v2 { color: var(--text3); font-size: 9px; }
+  .fn-arr { display: flex; align-items: center; justify-content: center;
+            flex: 0 0 16px; color: var(--text3); font-size: 12px; }
+  .card { background: var(--bg); border: 0.5px solid var(--border);
+          border-radius: var(--radius-lg); margin-bottom: 10px; }
+  .card-hdr { display: flex; align-items: center; justify-content: space-between;
+              padding: 10px 14px; cursor: pointer; user-select: none; }
+  .card-hdr-l { display: flex; align-items: center; gap: 8px;
+                font-size: 13px; font-weight: 500; color: var(--text); }
+  .card-hdr-l i { font-size: 15px; color: var(--text3); }
+  .chevron { font-size: 13px; color: var(--text3); transition: transform .2s; }
+  .chevron.open { transform: rotate(180deg); }
+  .card-body { padding: 0 14px 14px;
+               display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
+  .card-body.full { grid-template-columns: 1fr; }
+  .field { margin-bottom: 10px; }
+  .field-top { display: flex; justify-content: space-between;
+               align-items: center; margin-bottom: 3px; }
+  .field-label { font-size: 11px; color: var(--text2);
+                 display: flex; align-items: center; gap: 4px; }
+  .field-val { font-size: 12px; font-weight: 500; color: var(--text); }
+  .info-btn { position: relative; cursor: pointer; }
+  .info-btn i { font-size: 12px; color: var(--text3); }
+  .tip { display: none; position: absolute; left: 16px; top: 0; width: 200px;
+         background: var(--bg); border: 0.5px solid var(--border2);
+         border-radius: var(--radius); padding: 8px 10px;
+         font-size: 11px; color: var(--text2); line-height: 1.5; z-index: 99; }
+  .info-btn:hover .tip { display: block; }
+  .sw { display: flex; align-items: center; gap: 6px; }
+  .sw input[type=range] { flex: 1; accent-color: var(--green); }
+  .ni { width: 62px; font-size: 12px; padding: 3px 6px;
+        border: 0.5px solid var(--border2); border-radius: var(--radius);
+        background: var(--bg2); color: var(--text); text-align: right; }
+  .ni:focus { outline: none; border-color: var(--green); }
+  select { width: 100%; font-size: 12px; padding: 6px 8px;
+           border: 0.5px solid var(--border2); border-radius: var(--radius);
+           background: var(--bg2); color: var(--text); }
+  .steel-info { margin-top: 5px; font-size: 11px; padding: 6px 9px;
+                border-radius: var(--radius); border: 0.5px solid transparent; }
+  .si-ok { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+  .si-warn { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
+  .si-err { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+  .tog-row { display: flex; align-items: center; gap: 10px;
+             padding: 8px 14px 0; font-size: 12px; color: var(--text2); }
+  .toggle { position: relative; width: 36px; height: 20px; cursor: pointer; }
+  .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .ts { position: absolute; top:0;left:0;right:0;bottom:0;
+        background: var(--border2); border-radius: 10px; transition: .2s; }
+  .toggle input:checked + .ts { background: var(--green); }
+  .ts:before { content:""; position:absolute; width:14px; height:14px;
+               left:3px; top:3px; background:white; border-radius:50%; transition:.2s; }
+  .toggle input:checked + .ts:before { transform: translateX(16px); }
+  .sub-t { font-size: 11px; font-weight: 500; color: var(--text2);
+           margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
+  .results-grid { display: grid; grid-template-columns: 1fr 1fr 1fr;
+                  gap: 10px; padding: 0 14px 14px; }
+  .rc { border-top: 0.5px solid var(--border); padding-top: 10px; }
+  .rc-t { font-size: 10px; font-weight: 500; color: var(--text3);
+          text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px;
+          display: flex; align-items: center; gap: 6px; }
+  .src { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 400; }
+  .src-py { background: var(--blue-bg); color: var(--blue); }
+  .src-js { background: var(--bg2); color: var(--text3); }
+  .rr { display: flex; justify-content: space-between; padding: 2px 0;
+        font-size: 11px; border-bottom: 0.5px solid var(--border); }
+  .rr:last-child { border-bottom: none; }
+  .rr span:first-child { color: var(--text3); }
+  .rr span:last-child { font-weight: 500; color: var(--text); }
+  .rr.hl span:last-child { color: var(--green); }
+  .rr.wn span:last-child { color: var(--amber); }
+  .rr.er span:last-child { color: var(--red); }
+  .warn-box { margin: 0 14px 14px; padding: 10px 12px;
+              border-radius: var(--radius); font-size: 11px; line-height: 1.6; }
+  .warn-ok { background: var(--green-bg); border: 0.5px solid var(--green); color: var(--green); }
+  .warn-bad { background: var(--amber-bg); border: 0.5px solid var(--amber); color: var(--amber); }
+  .footer { text-align: center; font-size: 11px; color: var(--text3);
+            padding: 16px 0 8px; }
+  @media (max-width: 600px) {
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .card-body { grid-template-columns: 1fr; }
+    .results-grid { grid-template-columns: 1fr; }
+    .flow { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">DC</div>
+    <div>
+      <div class="logo-text">Decarbo Pyrolysis Calculator</div>
+      <div class="logo-sub">Jibito &mdash; Broza de Ca&ntilde;a BR-01</div>
+    </div>
+  </div>
+  <div class="tb-right">
+    <span class="api-dot" id="dot"></span>
+    <span class="api-label" id="api-lbl">connecting...</span>
+    <span class="badge badge-ok" id="status">FEASIBLE</span>
+  </div>
+</div>
+
+<div class="kpis">
+  <div class="kpi ok" id="kpi-t"><div class="kpi-l">Thermal margin</div><div class="kpi-v" id="kv-t">--</div><div class="kpi-u" id="ku-t">JS estimate</div></div>
+  <div class="kpi ok" id="kpi-p"><div class="kpi-l">PCC residence time</div><div class="kpi-v" id="kv-p">--</div><div class="kpi-u">EU WID min 2.0 s</div></div>
+  <div class="kpi" id="kpi-m"><div class="kpi-l">Max feed rate</div><div class="kpi-v" id="kv-m">--</div><div class="kpi-u" id="ku-m">kg/h thermal limit</div></div>
+  <div class="kpi"><div class="kpi-l">CO&#x2082; removed</div><div class="kpi-v" id="kv-c">--</div><div class="kpi-u">t CO&#x2082;/year</div></div>
+</div>
+
+<div class="flow">
+  <div class="fn"><div class="fn-l">Feed</div><div class="fn-v" id="fn-feed">--</div><div class="fn-v2">ar</div></div>
+  <div class="fn-arr">&#8250;</div>
+  <div class="fn"><div class="fn-l">Kiln</div><div class="fn-v" id="fn-kiln">--</div><div class="fn-v2" id="fn-u">--</div></div>
+  <div class="fn-arr">&#8250;</div>
+  <div class="fn"><div class="fn-l">Biochar</div><div class="fn-v" id="fn-bio">--</div><div class="fn-v2" id="fn-yld">--</div></div>
+  <div class="fn-arr">&#8250;</div>
+  <div class="fn"><div class="fn-l">Syngas</div><div class="fn-v" id="fn-syn">--</div><div class="fn-v2" id="fn-sp">--</div></div>
+  <div class="fn-arr">&#8250;</div>
+  <div class="fn" id="fn-rbu-node"><div class="fn-l">RBu</div><div class="fn-v" id="fn-rbu">--</div><div class="fn-v2">950&deg;C</div></div>
+  <div class="fn-arr" id="fn-rbu-arr">&#8250;</div>
+  <div class="fn"><div class="fn-l">PCC</div><div class="fn-v" id="fn-pcc">--</div><div class="fn-v2" id="fn-pcc-s">--</div></div>
+  <div class="fn-arr">&#8250;</div>
+  <div class="fn"><div class="fn-l">CO&#x2082;/yr</div><div class="fn-v" id="fn-co2">--</div><div class="fn-v2">sequestered</div></div>
+</div>
+
+<div class="card">
+  <div class="card-hdr" onclick="tog('cb1')">
+    <div class="card-hdr-l"><i class="ti ti-plant"></i> Feedstock &amp; operating point</div>
+    <i class="ti ti-chevron-down chevron open" id="cc1"></i>
+  </div>
+  <div class="card-body" id="cb1">
+    <div class="field"><div class="field-top"><div class="field-label">Feed rate (kg/h ar)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Primary throughput. Thermal limit is where Q_required (rising with feed) equals Q_delivered (fixed by reactor geometry).</div></div></div><span class="field-val" id="lv-feed">2000</span></div><div class="sw"><input type="range" id="sl-feed" min="200" max="4000" step="50" value="2000" oninput="sl(this,'lv-feed','n-feed');go()"><input class="ni" id="n-feed" type="number" value="2000" oninput="ni(this,'sl-feed','lv-feed');go()"></div></div>
+    <div class="field"><div class="field-top"><div class="field-label">Moisture (% ar)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Moisture dilutes LHV and increases heat demand. High moisture reduces dry feed rate and CO&#x2082; sequestration.</div></div></div><span class="field-val" id="lv-moist">10.0</span></div><div class="sw"><input type="range" id="sl-moist" min="5" max="40" step="0.5" value="10" oninput="sl(this,'lv-moist','n-moist',1);go()"><input class="ni" id="n-moist" type="number" value="10" step="0.5" oninput="ni(this,'sl-moist','lv-moist');go()"></div></div>
+    <div class="field"><div class="field-top"><div class="field-label">Pyrolysis temp (&deg;C)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Higher temp increases biochar quality (lower H/C) but increases Q_required, reducing max feed rate. Typical: 450-700&deg;C.</div></div></div><span class="field-val" id="lv-tpyr">550</span></div><div class="sw"><input type="range" id="sl-tpyr" min="400" max="750" step="10" value="550" oninput="sl(this,'lv-tpyr','n-tpyr');go()"><input class="ni" id="n-tpyr" type="number" value="550" oninput="ni(this,'sl-tpyr','lv-tpyr');go()"></div></div>
+    <div class="field"><div class="field-top"><div class="field-label">Operating hours/yr<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Affects annual CO&#x2082; totals only. Typical with maintenance: 7500-8200 h/yr.</div></div></div><span class="field-val" id="lv-hrs">8000</span></div><div class="sw"><input type="range" id="sl-hrs" min="3000" max="8760" step="100" value="8000" oninput="sl(this,'lv-hrs','n-hrs');go()"><input class="ni" id="n-hrs" type="number" value="8000" oninput="ni(this,'sl-hrs','lv-hrs');go()"></div></div>
+    <div class="field"><div class="field-top"><div class="field-label">Biochar Corg (% dry)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Organic carbon from lab. Drives CO&#x2082; sequestration calc. EBC Basic requires &ge;50% Corg. Jibito S01: 54.1%.</div></div></div><span class="field-val" id="lv-corg">54.1</span></div><div class="sw"><input type="range" id="sl-corg" min="40" max="90" step="0.5" value="54.1" oninput="sl(this,'lv-corg','n-corg',1);go()"><input class="ni" id="n-corg" type="number" value="54.1" step="0.5" oninput="ni(this,'sl-corg','lv-corg');go()"></div></div>
+    <div class="field"><div class="field-top"><div class="field-label">Biochar H/C molar<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">H/C &lt;0.4: 95% permanence (EBC Premium). H/C 0.4-0.7: 90% (EBC Basic). H/C &ge;0.7: not stable biochar.</div></div></div><span class="field-val" id="lv-hc">0.26</span></div><div class="sw"><input type="range" id="sl-hc" min="0.1" max="0.9" step="0.01" value="0.26" oninput="sl(this,'lv-hc','n-hc',2);go()"><input class="ni" id="n-hc" type="number" value="0.26" step="0.01" oninput="ni(this,'sl-hc','lv-hc');go()"></div></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hdr" onclick="tog('cb2')">
+    <div class="card-hdr-l"><i class="ti ti-refresh"></i> Rotary kiln &mdash; geometry &amp; materials</div>
+    <i class="ti ti-chevron-down chevron open" id="cc2"></i>
+  </div>
+  <div class="card-body" id="cb2">
+    <div class="field"><div class="field-top"><div class="field-label">Drum diameter (m)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">HX area = &pi; &times; D &times; L. Larger diameter raises the thermal limit proportionally.</div></div></div><span class="field-val" id="lv-diam">2.40</span></div><div class="sw"><input type="range" id="sl-diam" min="0.5" max="5.0" step="0.05" value="2.4" oninput="sl(this,'lv-diam','n-diam',2);go()"><input class="ni" id="n-diam" type="number" value="2.4" step="0.05" oninput="ni(this,'sl-diam','lv-diam');go()"></div></div>
+    <div class="field"><div class="field-top"><div class="field-label">Heated length (m)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Doubling length doubles Q_delivered and max feed rate. Most effective lever for increasing throughput.</div></div></div><span class="field-val" id="lv-len">6.0</span></div><div class="sw"><input type="range" id="sl-len" min="1" max="20" step="0.5" value="6" oninput="sl(this,'lv-len','n-len',1);go()"><input class="ni" id="n-len" type="number" value="6" step="0.5" oninput="ni(this,'sl-len','lv-len');go()"></div></div>
+    <div class="field"><div class="field-top"><div class="field-label">Wall thickness (mm)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">R_wall = t/&lambda;. For SS304 12mm: R_wall = 0.00075 m&sup2;K/W &mdash; only ~9% of total resistance. Pyrolysis-side HTC dominates.</div></div></div><span class="field-val" id="lv-wt">12</span></div><div class="sw"><input type="range" id="sl-wt" min="5" max="50" step="1" value="12" oninput="sl(this,'lv-wt','n-wt');go()"><input class="ni" id="n-wt" type="number" value="12" oninput="ni(this,'sl-wt','lv-wt');go()"></div></div>
+    <div class="field"><div class="field-top"><div class="field-label">Combustion gas T (&deg;C)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Temperature OUTSIDE the drum (not the PLC reading). &Delta;T = T_comb &minus; T_pyr drives Q_delivered = U &times; A &times; &Delta;T.</div></div></div><span class="field-val" id="lv-tcomb">900</span></div><div class="sw"><input type="range" id="sl-tcomb" min="600" max="1100" step="10" value="900" oninput="sl(this,'lv-tcomb','n-tcomb');go()"><input class="ni" id="n-tcomb" type="number" value="900" oninput="ni(this,'sl-tcomb','lv-tcomb');go()"></div></div>
+    <div class="field"><div class="field-top"><div class="field-label">h conv outside (W/m&sup2;K)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Convective HTC combustion gas side. At &gt;700&deg;C radiation (250-350 W/m&sup2;K) dominates and this term is secondary.</div></div></div><span class="field-val" id="lv-hconv">50</span></div><div class="sw"><input type="range" id="sl-hconv" min="10" max="120" step="5" value="50" oninput="sl(this,'lv-hconv','n-hconv');go()"><input class="ni" id="n-hconv" type="number" value="50" oninput="ni(this,'sl-hconv','lv-hconv');go()"></div></div>
+    <div class="field"><div class="field-top"><div class="field-label">h conv inside (W/m&sup2;K)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Convection only inside drum. Internal radiation (~150-200 W/m&sup2;K) added automatically by the engine.</div></div></div><span class="field-val" id="lv-hpyr">35</span></div><div class="sw"><input type="range" id="sl-hpyr" min="10" max="80" step="5" value="35" oninput="sl(this,'lv-hpyr','n-hpyr');go()"><input class="ni" id="n-hpyr" type="number" value="35" oninput="ni(this,'sl-hpyr','lv-hpyr');go()"></div></div>
+  </div>
+  <div style="padding:0 14px 14px">
+    <div class="field-label" style="margin-bottom:6px">Shell steel grade<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Sets max service temperature. Combustion gas above this limit causes creep deformation over time.</div></div></div>
+    <select id="sel-steel" onchange="go()">
+      <option value="S235JR">S235JR &mdash; Structural carbon steel (max 350&deg;C)</option>
+      <option value="S355JR">S355JR &mdash; High-strength structural (max 400&deg;C)</option>
+      <option value="P265GH">P265GH &mdash; Boiler grade EN 10216-2 (max 450&deg;C)</option>
+      <option value="16Mo3">16Mo3 &mdash; Mo-alloy creep-resistant (max 530&deg;C)</option>
+      <option value="13CrMo4-5">13CrMo4-5 &mdash; Cr-Mo creep-resistant (max 560&deg;C)</option>
+      <option value="SS304" selected>SS304 / 1.4301 &mdash; Austenitic stainless (max 870&deg;C)</option>
+      <option value="SS316L">SS316L / 1.4404 &mdash; Mo stainless HCl resistant (max 870&deg;C)</option>
+      <option value="SS321">SS321 / 1.4541 &mdash; Ti-stabilised (max 900&deg;C)</option>
+      <option value="SS309S">SS309S / 1.4833 &mdash; High Cr-Ni (max 1000&deg;C)</option>
+      <option value="SS310S">SS310S / 1.4845 &mdash; Heat-resistant (max 1050&deg;C)</option>
+      <option value="SS253MA">SS253MA / 1.4835 &mdash; Ce-alloyed (max 1100&deg;C)</option>
+      <option value="Alloy601">Alloy 601 / 2.4851 &mdash; Premium Ni-Cr-Al (max 1200&deg;C)</option>
+    </select>
+    <div class="steel-info si-ok" id="si">--</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hdr" onclick="tog('cb3')">
+    <div class="card-hdr-l"><i class="ti ti-flame"></i> Combustion chambers</div>
+    <i class="ti ti-chevron-down chevron open" id="cc3"></i>
+  </div>
+  <div class="tog-row">
+    <label class="toggle"><input type="checkbox" id="chk-dual" checked onchange="go()"><span class="ts"></span></label>
+    <span>Dual-chamber configuration (RBu + PCC)</span>
+  </div>
+  <div class="card-body" id="cb3" style="padding-top:12px">
+    <div id="rbu-p">
+      <div class="sub-t">RBu &mdash; reactor burner</div>
+      <div class="field"><div class="field-top"><div class="field-label">Internal diameter (mm)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Cylindrical RBu internal diameter after refractory. Jibito: 1300mm. Volume = &pi; &times; (D/2)&sup2; &times; L.</div></div></div><span class="field-val" id="lv-rbu-d">1300</span></div><div class="sw"><input type="range" id="sl-rbu-d" min="300" max="3000" step="50" value="1300" oninput="sl(this,'lv-rbu-d','n-rbu-d');go()"><input class="ni" id="n-rbu-d" type="number" value="1300" oninput="ni(this,'sl-rbu-d','lv-rbu-d');go()"></div></div>
+      <div class="field"><div class="field-top"><div class="field-label">Internal length (mm)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">RBu internal length. Jibito: 2800mm. With D=1300mm gives V=3.72 m&sup3;.</div></div></div><span class="field-val" id="lv-rbu-l">2800</span></div><div class="sw"><input type="range" id="sl-rbu-l" min="500" max="8000" step="100" value="2800" oninput="sl(this,'lv-rbu-l','n-rbu-l');go()"><input class="ni" id="n-rbu-l" type="number" value="2800" oninput="ni(this,'sl-rbu-l','lv-rbu-l');go()"></div></div>
+      <div class="field"><div class="field-top"><div class="field-label">Syngas split to RBu (%)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Fraction of total syngas directed to RBu. More to RBu = more kiln heat, longer PCC &tau;. Less to RBu = better EU WID margin in PCC.</div></div></div><span class="field-val" id="lv-split">40</span></div><div class="sw"><input type="range" id="sl-split" min="5" max="95" step="5" value="40" oninput="sl(this,'lv-split','n-split');go()"><input class="ni" id="n-split" type="number" value="40" oninput="ni(this,'sl-split','lv-split');go()"></div></div>
+      <div class="field"><div class="field-top"><div class="field-label">Excess air RBu (%)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Excess combustion air above stoichiometric. Higher ensures complete combustion but increases volumetric flow. Typical: 20-40%.</div></div></div><span class="field-val" id="lv-ea-rbu">30</span></div><div class="sw"><input type="range" id="sl-ea-rbu" min="5" max="100" step="5" value="30" oninput="sl(this,'lv-ea-rbu','n-ea-rbu');go()"><input class="ni" id="n-ea-rbu" type="number" value="30" oninput="ni(this,'sl-ea-rbu','lv-ea-rbu');go()"></div></div>
+    </div>
+    <div id="pcc-p">
+      <div class="sub-t">PCC &mdash; post-combustion chamber (EU WID)</div>
+      <div class="field"><div class="field-top"><div class="field-label">Internal width (mm)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">PCC internal width. Volume = W &times; H &times; L. EU WID requires &tau; &ge; 2.0s at &ge;850&deg;C. Jibito: 2000&times;4000&times;4000mm = 32 m&sup3;.</div></div></div><span class="field-val" id="lv-pcc-w">2000</span></div><div class="sw"><input type="range" id="sl-pcc-w" min="500" max="6000" step="100" value="2000" oninput="sl(this,'lv-pcc-w','n-pcc-w');go()"><input class="ni" id="n-pcc-w" type="number" value="2000" oninput="ni(this,'sl-pcc-w','lv-pcc-w');go()"></div></div>
+      <div class="field"><div class="field-top"><div class="field-label">Internal height (mm)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">PCC internal height. EU WID is a legal requirement &mdash; must hold &ge;850&deg;C for &ge;2.0s continuously.</div></div></div><span class="field-val" id="lv-pcc-h">4000</span></div><div class="sw"><input type="range" id="sl-pcc-h" min="500" max="8000" step="100" value="4000" oninput="sl(this,'lv-pcc-h','n-pcc-h');go()"><input class="ni" id="n-pcc-h" type="number" value="4000" oninput="ni(this,'sl-pcc-h','lv-pcc-h');go()"></div></div>
+      <div class="field"><div class="field-top"><div class="field-label">Internal length (mm)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Longer PCC directly increases &tau; and EU WID compliance margin.</div></div></div><span class="field-val" id="lv-pcc-l">4000</span></div><div class="sw"><input type="range" id="sl-pcc-l" min="500" max="10000" step="100" value="4000" oninput="sl(this,'lv-pcc-l','n-pcc-l');go()"><input class="ni" id="n-pcc-l" type="number" value="4000" oninput="ni(this,'sl-pcc-l','lv-pcc-l');go()"></div></div>
+      <div class="field"><div class="field-top"><div class="field-label">Excess air PCC (%)<div class="info-btn"><i class="ti ti-info-circle"></i><div class="tip">Excess air in PCC. Lower than RBu typical (20-30%). Higher increases flue gas volume and reduces &tau;.</div></div></div><span class="field-val" id="lv-ea-pcc">20</span></div><div class="sw"><input type="range" id="sl-ea-pcc" min="5" max="100" step="5" value="20" oninput="sl(this,'lv-ea-pcc','n-ea-pcc');go()"><input class="ni" id="n-ea-pcc" type="number" value="20" oninput="ni(this,'sl-ea-pcc','lv-ea-pcc');go()"></div></div>
+    </div>
+    <div id="sc-p" style="display:none;grid-column:1/-1">
+      <div class="sub-t">Single combustion chamber (EU WID)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px">
+        <div class="field"><div class="field-top"><div class="field-label">Width (mm)</div><span class="field-val" id="lv-sc-w">2000</span></div><div class="sw"><input type="range" id="sl-sc-w" min="500" max="6000" step="100" value="2000" oninput="sl(this,'lv-sc-w','n-sc-w');go()"><input class="ni" id="n-sc-w" type="number" value="2000" oninput="ni(this,'sl-sc-w','lv-sc-w');go()"></div></div>
+        <div class="field"><div class="field-top"><div class="field-label">Height (mm)</div><span class="field-val" id="lv-sc-h">4000</span></div><div class="sw"><input type="range" id="sl-sc-h" min="500" max="8000" step="100" value="4000" oninput="sl(this,'lv-sc-h','n-sc-h');go()"><input class="ni" id="n-sc-h" type="number" value="4000" oninput="ni(this,'sl-sc-h','lv-sc-h');go()"></div></div>
+        <div class="field"><div class="field-top"><div class="field-label">Length (mm)</div><span class="field-val" id="lv-sc-l">4000</span></div><div class="sw"><input type="range" id="sl-sc-l" min="500" max="10000" step="100" value="4000" oninput="sl(this,'lv-sc-l','n-sc-l');go()"><input class="ni" id="n-sc-l" type="number" value="4000" oninput="ni(this,'sl-sc-l','lv-sc-l');go()"></div></div>
+        <div class="field"><div class="field-top"><div class="field-label">Temp (&deg;C)</div><span class="field-val" id="lv-sc-t">900</span></div><div class="sw"><input type="range" id="sl-sc-t" min="800" max="1100" step="10" value="900" oninput="sl(this,'lv-sc-t','n-sc-t');go()"><input class="ni" id="n-sc-t" type="number" value="900" oninput="ni(this,'sl-sc-t','lv-sc-t');go()"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hdr" onclick="tog('cb4')">
+    <div class="card-hdr-l"><i class="ti ti-chart-bar"></i> Results</div>
+    <i class="ti ti-chevron-down chevron open" id="cc4"></i>
+  </div>
+  <div id="cb4">
+    <div class="warn-box warn-ok" id="warn">All constraints satisfied</div>
+    <div class="results-grid">
+      <div class="rc">
+        <div class="rc-t">Mass balance <span class="src src-js" id="mb-src">JS</span></div>
+        <div class="rr"><span>Feed (ar)</span><span id="r-feed">--</span></div>
+        <div class="rr"><span>Feed (dry)</span><span id="r-fdry">--</span></div>
+        <div class="rr"><span>Biochar yield</span><span id="r-yld">--</span></div>
+        <div class="rr"><span>Biochar (dry)</span><span id="r-bio">--</span></div>
+        <div class="rr"><span>Syngas</span><span id="r-syn">--</span></div>
+        <div class="rr"><span>NCG</span><span id="r-ncg">--</span></div>
+      </div>
+      <div class="rc">
+        <div class="rc-t">Heat transfer <span class="src src-js" id="ht-src">JS</span></div>
+        <div class="rr"><span>U overall</span><span id="r-U">--</span></div>
+        <div class="rr"><span>h_rad outside</span><span id="r-hro">--</span></div>
+        <div class="rr"><span>h_rad inside</span><span id="r-hri">--</span></div>
+        <div class="rr"><span>T wall outer</span><span id="r-two">--</span></div>
+        <div class="rr"><span>T wall inner</span><span id="r-twi">--</span></div>
+        <div class="rr"><span>Q delivered</span><span id="r-qdel">--</span></div>
+        <div class="rr"><span>Q required</span><span id="r-qreq">--</span></div>
+        <div class="rr hl"><span>Thermal margin</span><span id="r-marg">--</span></div>
+        <div class="rr"><span>Max feed rate</span><span id="r-mxfr">--</span></div>
+      </div>
+      <div class="rc">
+        <div class="rc-t">Combustion &amp; CO&#x2082; <span class="src src-js" id="co-src">JS</span></div>
+        <div class="rr" id="rr-rbuvol"><span>RBu volume</span><span id="r-rbuvol">--</span></div>
+        <div class="rr" id="rr-rbuair"><span>RBu air</span><span id="r-rbuair">--</span></div>
+        <div class="rr" id="rr-rbutau"><span>RBu tau</span><span id="r-rbutau">--</span></div>
+        <div class="rr"><span>PCC volume</span><span id="r-pccvol">--</span></div>
+        <div class="rr"><span>PCC air</span><span id="r-pccair">--</span></div>
+        <div class="rr hl"><span>PCC tau</span><span id="r-pcctau">--</span></div>
+        <div class="rr"><span>Total air</span><span id="r-tair">--</span></div>
+        <div class="rr hl"><span>CO&#x2082;/year</span><span id="r-co2y">--</span></div>
+        <div class="rr"><span>EBC permanence</span><span id="r-perm">--</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Decarbo Engineering &nbsp;&bull;&nbsp; Pyrolysis Plant Calculator &nbsp;&bull;&nbsp; <a href="https://web-production-fbd5fc.up.railway.app/docs" target="_blank" style="color:var(--text3)">API docs</a></div>
+</div>
+
+<script>
+const API='https://web-production-fbd5fc.up.railway.app';
+const SB=5.67e-8,T0=273.15,EMIS=0.85;
+const NCG=0.543,TAR=0.190,H2O=0.268;
+const YIELD=6.843/38.68,CP=1.65,LAT100=2257,STOIC_NCG=5.17,STOIC_TAR=8.34;
+const STEEL={S235JR:{lam:52,maxT:350},S355JR:{lam:50,maxT:400},P265GH:{lam:46,maxT:450},
+  "16Mo3":{lam:42,maxT:530},"13CrMo4-5":{lam:38,maxT:560},SS304:{lam:16,maxT:870},
+  SS316L:{lam:15,maxT:870},SS321:{lam:16,maxT:900},SS309S:{lam:15,maxT:1000},
+  SS310S:{lam:14,maxT:1050},SS253MA:{lam:15,maxT:1100},Alloy601:{lam:11,maxT:1200}};
+
+let debT=null,apiOk=false;
+
+function $(id){return document.getElementById(id);}
+function sv(id,v){const e=$(id);if(e)e.textContent=v;}
+function sl(el,lid,nid,dec){
+  if(lid){const l=$(lid);if(l)l.textContent=dec!=null?parseFloat(el.value).toFixed(dec):el.value;}
+  if(nid){const n=$(nid);if(n)n.value=el.value;}
+}
+function ni(el,slid,lid){
+  const s=$(slid);if(s)s.value=el.value;
+  const l=$(lid);if(l)l.textContent=el.value;
+}
+function tog(id){
+  const b=$(id),c=$('c'+id.slice(1));
+  if(!b)return;
+  b.style.display=b.style.display==='none'?'':('none');
+  if(c)c.classList.toggle('open');
+}
+function v(id){return +$(id).value;}
+
+function radHTC(Th,Tc){
+  const Thk=Th+T0,Tck=Tc+T0;
+  if(Math.abs(Thk-Tck)<0.5)return 0;
+  return SB*EMIS*(Math.pow(Thk,4)-Math.pow(Tck,4))/(Thk-Tck);
+}
+function jsHT(Tc,Tp,diam,len,wt,hconv,hpyr,lam){
+  const A=Math.PI*diam*len,tw=wt/1000;
+  let Twi=Tp+0.3*(Tc-Tp),Two=Tc-0.05*(Tc-Tp),U=0,hro=0,hri=0,hpe=0,hct=0,Rw=0;
+  for(let i=0;i<25;i++){
+    hri=radHTC(Twi,Tp);hpe=hpyr+hri;hro=radHTC(Tc,Two);hct=hconv+hro;
+    const Rc=1/hct,Rw_=tw/lam,Rp=1/hpe;Rw=Rw_;U=1/(Rc+Rw_+Rp);
+    const q=U*(Tc-Tp);const nTwo=Tc-q/hct,nTwi=Tp+q/hpe;
+    if(Math.abs(nTwi-Twi)<0.1&&Math.abs(nTwo-Two)<0.1){Twi=nTwi;Two=nTwo;break;}
+    Twi=nTwi;Two=nTwo;
+  }
+  return{Qdel:U*A*(Tc-Tp)/1000,U,hro,hri,hpe,Two,Twi,A};
+}
+function rho(T){return 1.293*(T0/(T+T0));}
+function airDem(sg,ea){const th=(sg*NCG)*STOIC_NCG+(sg*TAR)*STOIC_TAR;const act=th*(1+ea/100);return{act,flue:sg+act};}
+
+function getP(){
+  return{
+    feed:v('sl-feed'),moist:v('sl-moist'),Tpyr:v('sl-tpyr'),hrs:v('sl-hrs'),corg:v('sl-corg'),hc:v('sl-hc'),
+    diam:v('sl-diam'),len:v('sl-len'),wt:v('sl-wt'),Tcomb:v('sl-tcomb'),hconv:v('sl-hconv'),hpyr:v('sl-hpyr'),
+    steel:$('sel-steel').value,dual:$('chk-dual').checked,
+    split:v('sl-split'),eaRbu:v('sl-ea-rbu'),eaPcc:v('sl-ea-pcc'),
+    rbuD:v('sl-rbu-d'),rbuL:v('sl-rbu-l'),
+    pccW:v('sl-pcc-w'),pccH:v('sl-pcc-h'),pccL:v('sl-pcc-l'),
+    scW:v('sl-sc-w'),scH:v('sl-sc-h'),scL:v('sl-sc-l'),scT:v('sl-sc-t')
+  };
+}
+
+function renderUI(p,htRes,bio,syn,rbuVol,pccVol,rbuAir,pccAir,rbuTau,pccTau,totalAir,pccOk,fromPy){
+  const sg=STEEL[p.steel]||{lam:16,maxT:870};
+  const perm=p.hc<0.4?0.95:p.hc<0.7?0.90:0.80;
+  const CO2y=bio*(p.corg/100)*perm*(44.009/12.011)*p.hrs/1000;
+  const fd=p.feed*(1-p.moist/100);
+  const Qreq=(fd/3600)*CP*(p.Tpyr-35)+(p.feed*p.moist/100/3600)*(4.18*(100-35)+LAT100)+(fd/3600)*380;
+  const Qr1k=(1000*(1-p.moist/100)/3600)*CP*(p.Tpyr-35)+(1000*p.moist/100/3600)*(4.18*(100-35)+LAT100)+(1000*(1-p.moist/100)/3600)*380;
+  const maxF=Qr1k>0?1000*(htRes.Qdel/Qr1k):0;
+  const margin=(htRes.Qdel-Qreq)/Qreq*100;
+
+  $('rbu-p').style.display=p.dual?'':'none';
+  $('pcc-p').style.display=p.dual?'':'none';
+  $('sc-p').style.display=p.dual?'none':'';
+  $('fn-rbu-node').style.display=p.dual?'':'none';
+  $('fn-rbu-arr').style.display=p.dual?'':'none';
+  ['rr-rbuvol','rr-rbuair','rr-rbutau'].forEach(id=>{const e=$(id);if(e)e.style.display=p.dual?'':'none';});
+
+  const sn=p.Tcomb>sg.maxT*1.05?'si-err':p.Tcomb>sg.maxT*0.95?'si-warn':'si-ok';
+  $('si').className='steel-info '+sn;
+  $('si').textContent=p.Tcomb>sg.maxT*1.05?'CRITICAL: '+p.steel+' max '+sg.maxT+'°C. Gas '+p.Tcomb+'°C is '+(p.Tcomb-sg.maxT)+'°C over limit.':
+    p.Tcomb>sg.maxT*0.95?'WARNING: '+p.steel+' rated '+sg.maxT+'°C. Gas '+p.Tcomb+'°C within 5% of limit.':
+    'OK: '+p.steel+' rated '+sg.maxT+'°C. Gas '+p.Tcomb+'°C is safe.';
+
+  sv('fn-feed',p.feed+' kg/h');sv('fn-kiln',p.Tpyr+'°C');sv('fn-u','U='+Math.round(htRes.U)+' W/m²K');
+  sv('fn-bio',Math.round(bio)+' kg/h');sv('fn-yld',(YIELD*100).toFixed(1)+'%');
+  sv('fn-syn',Math.round(syn)+' kg/h');sv('fn-sp',p.dual?p.split+'% RBu':'single');
+  sv('fn-rbu',p.dual?'τ='+rbuTau.toFixed(2)+'s':'');
+  sv('fn-pcc','τ='+pccTau.toFixed(2)+'s');
+  sv('fn-pcc-s',pccOk?'EU WID ✓':'EU WID ✗');
+  sv('fn-co2',Math.round(CO2y)+' t');
+
+  sv('kv-t',Math.round(margin)+'%');sv('kv-p',pccTau.toFixed(1)+'s');
+  sv('kv-m',Math.round(maxF));sv('kv-c',Math.round(CO2y));
+  sv('ku-t',fromPy?'Python engine':'JS estimate');
+  sv('ku-m',fromPy?'Python engine':'JS estimate');
+
+  $('kpi-t').className='kpi '+(margin>20?'ok':margin>0?'warn':'err');
+  $('kpi-p').className='kpi '+(pccTau>2.5?'ok':pccTau>=2.0?'warn':'err');
+
+  const src=fromPy?'py':'js';
+  ['mb-src','ht-src','co-src'].forEach(id=>{const e=$(id);if(e){e.textContent=fromPy?'Python':'JS';e.className='src src-'+src;}});
+
+  sv('r-feed',p.feed+' kg/h');sv('r-fdry',Math.round(fd)+' kg/h');
+  sv('r-yld',(YIELD*100).toFixed(2)+'%');sv('r-bio',Math.round(bio)+' kg/h');
+  sv('r-syn',Math.round(syn)+' kg/h');sv('r-ncg',Math.round(syn*NCG)+' kg/h');
+  sv('r-U',Math.round(htRes.U)+' W/m²K');sv('r-hro',Math.round(htRes.hro)+' W/m²K');
+  sv('r-hri',Math.round(htRes.hri)+' W/m²K');
+  sv('r-two',Math.round(htRes.Two)+'°C');sv('r-twi',Math.round(htRes.Twi)+'°C');
+  sv('r-qdel',Math.round(htRes.Qdel)+' kW');sv('r-qreq',Math.round(Qreq)+' kW');
+  const me=$('r-marg');
+  me.textContent=Math.round(margin)+'%';
+  me.parentElement.className='rr '+(margin>10?'hl':margin>0?'wn':'er');
+  sv('r-mxfr',Math.round(maxF)+' kg/h');
+  sv('r-rbuvol',p.dual?rbuVol.toFixed(2)+' m³':'—');
+  sv('r-rbuair',p.dual?Math.round(rbuAir)+' kg/h':'—');
+  sv('r-rbutau',p.dual?rbuTau.toFixed(2)+' s':'—');
+  sv('r-pccvol',pccVol.toFixed(2)+' m³');sv('r-pccair',Math.round(pccAir)+' kg/h');
+  const pe=$('r-pcctau');pe.textContent=pccTau.toFixed(2)+' s';
+  pe.parentElement.className='rr '+(pccTau>2.5?'hl':pccTau>=2.0?'wn':'er');
+  sv('r-tair',Math.round(totalAir)+' kg/h');
+  sv('r-co2y',Math.round(CO2y)+' t/yr');
+  sv('r-perm',(perm*100).toFixed(0)+'% (H/C='+p.hc.toFixed(2)+')');
+
+  const ws=[];
+  if(margin<0)ws.push('Thermal limit exceeded — feed '+p.feed+' kg/h above kiln capacity (max '+Math.round(maxF)+' kg/h)');
+  if(margin>=0&&margin<10)ws.push('Low thermal margin ('+Math.round(margin)+'%) — small increase will exceed the limit');
+  if(!pccOk)ws.push('EU WID non-compliant — PCC tau='+pccTau.toFixed(2)+'s < 2.0s minimum');
+  if(pccTau>=2.0&&pccTau<2.3)ws.push('Low PCC margin (tau='+pccTau.toFixed(2)+'s) — close to EU WID limit');
+  if(p.Tcomb>sg.maxT)ws.push('Steel temperature exceeded — '+p.steel+' rated '+sg.maxT+'°C, gas is '+p.Tcomb+'°C');
+  if(p.hc>=0.7)ws.push('Biochar H/C='+p.hc.toFixed(2)+' — does not qualify for EBC. Target H/C < 0.4 for Premium.');
+
+  const w=$('warn');
+  if(ws.length>0){w.className='warn-box warn-bad';w.innerHTML=ws.map(x=>'<div style="margin-bottom:3px">⚠ '+x+'</div>').join('');}
+  else{w.className='warn-box warn-ok';w.textContent='All constraints satisfied — system fully feasible';}
+
+  const b=$('status');
+  if(margin<0||!pccOk){b.textContent='NON-COMPLIANT';b.className='badge badge-err';}
+  else if(p.Tcomb>sg.maxT){b.textContent='STEEL WARNING';b.className='badge badge-warn';}
+  else if(margin<10||pccTau<2.3){b.textContent='TIGHT';b.className='badge badge-warn';}
+  else{b.textContent='FEASIBLE';b.className='badge badge-ok';}
+}
+
+function jsRun(){
+  const p=getP();
+  const sg=STEEL[p.steel]||{lam:16,maxT:870};
+  const fd=p.feed*(1-p.moist/100),bio=fd*YIELD,syn=p.feed-bio;
+  const ht=jsHT(p.Tcomb,p.Tpyr,p.diam,p.len,p.wt,p.hconv,p.hpyr,sg.lam);
+  const sR=syn*(p.split/100),sP=syn*(1-p.split/100);
+  const rbuVol=Math.PI*Math.pow(p.rbuD/2000,2)*(p.rbuL/1000);
+  const pccVol=(p.pccW/1000)*(p.pccH/1000)*(p.pccL/1000);
+  const scVol=(p.scW/1000)*(p.scH/1000)*(p.scL/1000);
+  const rA=airDem(sR,p.eaRbu),pA=airDem(sP,p.eaPcc);
+  const rbuTau=p.dual?rbuVol/(rA.flue/3600/rho(950)):0;
+  const pccTau=p.dual?pccVol/(pA.flue/3600/rho(900)):scVol/(airDem(syn,25).flue/3600/rho(p.scT||900));
+  const pccVf=p.dual?pccVol:scVol;
+  renderUI(p,ht,bio,syn,rbuVol,pccVf,rA.act,pA.act,rbuTau,pccTau,rA.act+pA.act,pccTau>=2.0,false);
+}
+
+async function apiRun(){
+  const p=getP();
+  $('dot').className='api-dot calc';sv('api-lbl','calculating...');
+  try{
+    const body={
+      project_name:'Jibito',scenario_name:p.feed+' kg/h',feed_rate_ar:p.feed,
+      feedstock:{C_dry:35.17,H_dry:6.05,N_dry:0.98,O_dry:50.55,S_dry:0.431,
+        moisture_ar:p.moist,ash_ar:6.15,HHV_dry_kcal:3890.42},
+      reactor:{diameter_outer:p.diam,length_heated:p.len,wall_thickness:p.wt/1000,
+        steel_grade:p.steel,T_combustion_gas:p.Tcomb,T_pyrolysis:p.Tpyr,
+        h_combustion_conv:p.hconv,h_pyrolysis_conv:p.hpyr},
+      combustion:{dual_chamber:p.dual,T_rbu:950,T_pcc:900,
+        excess_air_rbu:1+p.eaRbu/100,excess_air_pcc:1+p.eaPcc/100,
+        syngas_split_rbu:p.split/100,
+        rbu:p.dual?{is_cylindrical:true,diameter_ext:p.rbuD/1000+0.2,length_ext:p.rbuL/1000+0.2,refractory_thickness:0.1,name:'RBu'}:null,
+        pcc:{is_cylindrical:false,length_ext:p.pccL/1000+0.2,width_ext:p.pccW/1000+0.2,height_ext:p.pccH/1000+0.2,refractory_thickness:0.1,name:'PCC'}},
+      syngas:{NCG_wt:0.543,tars_wt:0.190,H2O_wt:0.268},
+      biochar_ash_ar:38.68,biochar_C_organic:p.corg,biochar_H_C:p.hc,
+      operating_hours_yr:p.hrs,air_sensible_kW:157,flue_gas_loss_kW:5909,biochar_latent_kW:4
+    };
+    const t0=Date.now();
+    const resp=await fetch(API+'/api/calculate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const d=await resp.json();
+    const ms=Date.now()-t0;
+    $('dot').className='api-dot on';sv('api-lbl','Python engine ('+ms+' ms)');
+    apiOk=true;
+    const ht=d.heat_transfer,mb=d.mass_balance,co=d.combustion;
+    const htR={Qdel:ht.Q_delivered_kW,U:ht.U_overall,hro:ht.h_rad_outside,
+               hri:ht.h_rad_inside,hpe:ht.h_pyrolysis_eff,Two:ht.T_wall_outer,Twi:ht.T_wall_inner,
+               A:Math.PI*p.diam*p.len};
+    htR.margin=ht.thermal_margin_pct;htR.maxF=ht.max_feed_rate_ar;
+    const rbuVol=p.dual?Math.PI*Math.pow(p.rbuD/2000,2)*(p.rbuL/1000):0;
+    const pccVol=(p.pccW/1000)*(p.pccH/1000)*(p.pccL/1000);
+    renderUI(p,htR,mb.biochar_dry,mb.syngas,rbuVol,pccVol,
+      co.rbu_air_kg_h,co.pcc_air_kg_h,co.rbu_residence_time_s,
+      co.pcc_residence_time_s,co.total_air_kg_h,co.pcc_eu_wid_compliant,true);
+  }catch(e){
+    $('dot').className='api-dot err';sv('api-lbl','API error — showing JS estimate');
+  }
+}
+
+function go(){jsRun();clearTimeout(debT);debT=setTimeout(apiRun,400);}
+
+async function checkApi(){
+  try{
+    const r=await fetch(API+'/health');const d=await r.json();
+    if(d.status==='ok'){$('dot').className='api-dot on';sv('api-lbl','connected');apiOk=true;apiRun();}
+  }catch(e){$('dot').className='api-dot err';sv('api-lbl','API offline — JS only');}
+}
+
+jsRun();checkApi();
+</script>
+</body>
+</html>
