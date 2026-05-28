@@ -257,6 +257,7 @@
       <option value="SS321">SS321 / 1.4541 &mdash; Ti-stabilised (max 900&deg;C)</option>
       <option value="SS309S">SS309S / 1.4833 &mdash; High Cr-Ni (max 1000&deg;C)</option>
       <option value="SS310S">SS310S / 1.4845 &mdash; Heat-resistant (max 1050&deg;C)</option>
+      <option value="SS314S">SS314S / 1.4841 &mdash; High-Si heat-resistant stainless (max 1050&deg;C)</option>
       <option value="SS253MA">SS253MA / 1.4835 &mdash; Ce-alloyed (max 1100&deg;C)</option>
       <option value="Alloy601">Alloy 601 / 2.4851 &mdash; Premium Ni-Cr-Al (max 1200&deg;C)</option>
     </select>
@@ -351,12 +352,13 @@
 <script>
 const API='https://web-production-fbd5fc.up.railway.app';
 const SB=5.67e-8,T0=273.15,EMIS=0.85;
+const SB=5.67e-8,T0=273.15,EMIS=0.85;
 const NCG=0.543,TAR=0.190,H2O=0.268;
 const YIELD=6.843/38.68,CP=1.65,LAT100=2257,STOIC_NCG=5.17,STOIC_TAR=8.34;
 const STEEL={S235JR:{lam:52,maxT:350},S355JR:{lam:50,maxT:400},P265GH:{lam:46,maxT:450},
   "16Mo3":{lam:42,maxT:530},"13CrMo4-5":{lam:38,maxT:560},SS304:{lam:16,maxT:870},
   SS316L:{lam:15,maxT:870},SS321:{lam:16,maxT:900},SS309S:{lam:15,maxT:1000},
-  SS310S:{lam:14,maxT:1050},SS253MA:{lam:15,maxT:1100},Alloy601:{lam:11,maxT:1200}};
+  SS310S:{lam:14,maxT:1050},SS314S:{lam:14,maxT:1050},SS253MA:{lam:15,maxT:1100},Alloy601:{lam:11,maxT:1200}};
 
 let debT=null,apiOk=false;
 
